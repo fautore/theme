@@ -51,8 +51,9 @@ version 1
 include themes/gruvbox.conf
 ```
 
-Theme files live under `~/.config/theme/themes/<id>.conf`. A theme file contains
-metadata comments beginning with `#@`, followed by palette keys:
+Theme files live under `~/.config/theme/themes/<id>.conf`. Example theme files
+are available in `examples/`. A theme file contains metadata comments beginning
+with `#@`, followed by palette keys:
 
 ```conf
 version 1
