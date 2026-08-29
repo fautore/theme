@@ -46,6 +46,7 @@ The CLI reads the selected palette from `$XDG_CONFIG_HOME/theme/theme.conf`, or
 include one theme file:
 
 ```conf
+version 1
 # Shared theme pointer. Managed by the theme CLI.
 include themes/gruvbox.conf
 ```
@@ -54,6 +55,7 @@ Theme files live under `~/.config/theme/themes/<id>.conf`. A theme file contains
 metadata comments beginning with `#@`, followed by palette keys:
 
 ```conf
+version 1
 #@ id gruvbox
 #@ display_name Gruvbox Dark
 #@ nvim_colorscheme gruvbox

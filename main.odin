@@ -57,6 +57,24 @@ normalize_id :: proc(id: string) -> string {
 	return id
 }
 
+require_version_directive :: proc(source, path: string) -> bool {
+	contents := source
+	for raw_line in strings.split_lines_iterator(&contents) {
+		line := strings.trim_space(raw_line)
+		if line == "" {
+			continue
+		}
+		fields := strings.fields(line)
+		if len(fields) == 2 && fields[0] == "version" && fields[1] == "1" {
+			return true
+		}
+		fmt.eprintf("%s must start with: version 1\n", path)
+		return false
+	}
+	fmt.eprintf("%s must start with: version 1\n", path)
+	return false
+}
+
 selected_theme_path :: proc() -> (string, bool) {
 	path := fmt.aprintf("%s/theme.conf", theme_root(), allocator = context.temp_allocator)
 	data, err := os.read_entire_file(path, context.allocator)
@@ -65,6 +83,9 @@ selected_theme_path :: proc() -> (string, bool) {
 		return "", false
 	}
 	source := string(data)
+	if !require_version_directive(source, path) {
+		return "", false
+	}
 	for raw_line in strings.split_lines_iterator(&source) {
 		line := strings.trim_space(raw_line)
 		if line == "" || line[0] == '#' {
@@ -152,12 +173,18 @@ load_theme :: proc(path: string) -> (Theme, bool) {
 		return theme, false
 	}
 	source := string(data)
+	if !require_version_directive(source, path) {
+		return theme, false
+	}
 	for raw_line in strings.split_lines_iterator(&source) {
 		line := strings.trim_space(raw_line)
 		if line == "" {
 			continue
 		}
 		fields := strings.fields(line)
+		if fields[0] == "version" {
+			continue
+		}
 		if strings.has_prefix(line, "#@") {
 			metadata := strings.trim_space(line[2:])
 			metadata_fields := strings.fields(metadata)
@@ -576,7 +603,7 @@ set_theme :: proc(raw_id: string) -> bool {
 		return false
 	}
 	pointer := fmt.aprintf(
-		"# Shared theme pointer. Managed by the theme CLI.\ninclude themes/%s.conf\n",
+		"version 1\n# Shared theme pointer. Managed by the theme CLI.\ninclude themes/%s.conf\n",
 		id,
 	)
 	defer delete(pointer)
