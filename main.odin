@@ -247,8 +247,9 @@ render_kde_colors :: proc(theme: Theme) -> string {
 }
 
 run_process :: proc(command: []string, quiet := false) -> bool {
-	environment, _ := os.environ(context.temp_allocator)
-	desc := os.Process_Desc{command = command, env = environment}
+	// A nil environment inherits the CLI's environment, including the UTF-8
+	// locale established in main.
+	desc := os.Process_Desc{command = command}
 	if !quiet {
 		desc.stdin = os.stdin
 		desc.stdout = os.stdout
@@ -287,9 +288,11 @@ apply_kde :: proc(theme: Theme) -> bool {
 		fmt.eprintf("Could not write %s: %v\n", desktop_colors_path, err)
 		return false
 	}
-	metadata := fmt.aprintf(`{
-  "KPlugin": {
-    "Authors": [{"Name": "theme CLI"}],
+	// Odin's formatter treats a literal opening brace as Python-style format
+	// syntax, so emit JSON opening braces through %c placeholders.
+	metadata := fmt.aprintf(`%c
+  "KPlugin": %c
+    "Authors": [%c"Name": "theme CLI"}],
     "Description": "Shared %s palette with system Plasma assets",
     "EnabledByDefault": false,
     "Id": "%s",
@@ -298,7 +301,7 @@ apply_kde :: proc(theme: Theme) -> bool {
     "Version": "1.0"
   }
 }
-`, theme.display_name, theme.kde_id, theme.display_name)
+`, '{', '{', '{', theme.display_name, theme.kde_id, theme.display_name)
 	defer delete(metadata)
 	metadata_path := fmt.aprintf("%s/metadata.json", desktop_dir, allocator=context.temp_allocator)
 	if err := os.write_entire_file(metadata_path, metadata); err != nil {
@@ -379,6 +382,10 @@ print_help :: proc() {
 }
 
 main :: proc() {
+	// KDE's Qt tools require UTF-8. Force a portable UTF-8 locale for child
+	// processes even when the interactive locale references missing locales.
+	_ = os.set_env("LC_ALL", "C.UTF-8")
+
 	if config_home() == "" {
 		fmt.eprintln("Could not determine the configuration directory.")
 		os.exit(1)
