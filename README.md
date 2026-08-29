@@ -1,7 +1,8 @@
 # theme CLI
 
 Small Odin CLI that manages the shared configuration in
-`~/.config/theme/theme.conf` and applies it to KDE/Qt, Kitty, tmux, and Neovim.
+`~/.config/theme/theme.conf` and applies it to KDE/Qt, Kitty, tmux, Neovim,
+Firefox, and Chrome.
 
 ## Installation
 
