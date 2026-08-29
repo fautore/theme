@@ -1,8 +1,8 @@
 # theme CLI
 
 Small Odin CLI that manages the shared configuration in
-`~/.config/theme/theme.conf` and applies it to KDE/Qt, Kitty, tmux, Neovim,
-Firefox, and Chrome.
+`~/.config/theme/theme.conf` and applies it to KDE/Qt, SDDM, Kitty, tmux,
+Neovim, Firefox, and Chrome.
 
 ## Installation
 
@@ -39,6 +39,12 @@ theme set gruvbox
 theme set catppuccin
 theme apply
 ```
+
+SDDM support generates a login-screen theme in
+`~/.config/theme/sddm-theme`, installs it to
+`/usr/share/sddm/themes/theme-cli`, and selects it through
+`/etc/sddm.conf.d/theme-cli.conf` when run as root or when `pkexec` is
+available. The new display-manager theme appears on the next login screen.
 
 ## Palette reference
 
@@ -106,6 +112,8 @@ Optional metadata keys currently parsed for external config consumers:
 
 - `nvim_flavour`
 - `nvim_contrast`
+- `sddm_wallpaper`: image copied into the generated SDDM theme. Absolute paths
+  and paths beginning with `~/` are supported.
 
 Required palette keys:
 
