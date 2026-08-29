@@ -3,10 +3,30 @@
 Small Odin CLI that manages the shared configuration in
 `~/.config/theme/theme.conf` and applies it to KDE/Qt, Kitty, tmux, and Neovim.
 
-Build and install:
+## Installation
+
+Build the CLI:
 
 ```sh
-odin build . -out:$HOME/.local/bin/theme
+make build
+```
+
+Run it from the source tree:
+
+```sh
+make run ARGS="list"
+```
+
+Install it to `~/.local/bin/theme`:
+
+```sh
+make install
+```
+
+To install somewhere else, override `PREFIX`:
+
+```sh
+make install PREFIX=/usr/local
 ```
 
 Usage:
