@@ -6,18 +6,18 @@ import "core:strconv"
 import "core:strings"
 
 Theme :: struct {
-	id:                  string,
-	display_name:        string,
-	nvim_colorscheme:    string,
-	nvim_flavour:        string,
-	nvim_contrast:       string,
-	kde_id:              string,
-	kde_accent:          string,
-	background_alt:      string,
-	background_hard:     string,
-	foreground_inactive: string,
-	foreground:          string,
-	background:          string,
+	id:                   string,
+	display_name:         string,
+	nvim_colorscheme:     string,
+	nvim_flavour:         string,
+	nvim_contrast:        string,
+	kde_id:               string,
+	kde_accent:           string,
+	background_alt:       string,
+	background_hard:      string,
+	foreground_inactive:  string,
+	foreground:           string,
+	background:           string,
 	selection_foreground: string,
 	selection_background: string,
 	colors:               [16]string,
@@ -31,11 +31,11 @@ config_home :: proc() -> string {
 	if home == "" {
 		return ""
 	}
-	return fmt.aprintf("%s/.config", home, allocator=context.temp_allocator)
+	return fmt.aprintf("%s/.config", home, allocator = context.temp_allocator)
 }
 
 theme_root :: proc() -> string {
-	return fmt.aprintf("%s/theme", config_home(), allocator=context.temp_allocator)
+	return fmt.aprintf("%s/theme", config_home(), allocator = context.temp_allocator)
 }
 
 valid_id :: proc(id: string) -> bool {
@@ -58,7 +58,7 @@ normalize_id :: proc(id: string) -> string {
 }
 
 selected_theme_path :: proc() -> (string, bool) {
-	path := fmt.aprintf("%s/theme.conf", theme_root(), allocator=context.temp_allocator)
+	path := fmt.aprintf("%s/theme.conf", theme_root(), allocator = context.temp_allocator)
 	data, err := os.read_entire_file(path, context.allocator)
 	if err != nil {
 		fmt.eprintf("Could not read %s: %v\n", path, err)
@@ -71,11 +71,20 @@ selected_theme_path :: proc() -> (string, bool) {
 			continue
 		}
 		fields := strings.fields(line)
-		if len(fields) == 2 && fields[0] == "include" && strings.has_prefix(fields[1], "themes/") && strings.has_suffix(fields[1], ".conf") {
+		if len(fields) == 2 &&
+		   fields[0] == "include" &&
+		   strings.has_prefix(fields[1], "themes/") &&
+		   strings.has_suffix(fields[1], ".conf") {
 			if strings.contains(fields[1], "..") {
 				break
 			}
-			return fmt.aprintf("%s/%s", theme_root(), fields[1], allocator=context.temp_allocator), true
+			return fmt.aprintf(
+					"%s/%s",
+					theme_root(),
+					fields[1],
+					allocator = context.temp_allocator,
+				),
+				true
 		}
 	}
 	fmt.eprintf("%s must contain: include themes/<name>.conf\n", path)
@@ -84,25 +93,39 @@ selected_theme_path :: proc() -> (string, bool) {
 
 set_metadata :: proc(theme: ^Theme, key, value: string) {
 	switch key {
-	case "id":                  theme.id = value
-	case "display_name":        theme.display_name = value
-	case "nvim_colorscheme":    theme.nvim_colorscheme = value
-	case "nvim_flavour":        theme.nvim_flavour = value
-	case "nvim_contrast":       theme.nvim_contrast = value
-	case "kde_id":              theme.kde_id = value
-	case "kde_accent":          theme.kde_accent = value
-	case "background_alt":      theme.background_alt = value
-	case "background_hard":     theme.background_hard = value
-	case "foreground_inactive": theme.foreground_inactive = value
+	case "id":
+		theme.id = value
+	case "display_name":
+		theme.display_name = value
+	case "nvim_colorscheme":
+		theme.nvim_colorscheme = value
+	case "nvim_flavour":
+		theme.nvim_flavour = value
+	case "nvim_contrast":
+		theme.nvim_contrast = value
+	case "kde_id":
+		theme.kde_id = value
+	case "kde_accent":
+		theme.kde_accent = value
+	case "background_alt":
+		theme.background_alt = value
+	case "background_hard":
+		theme.background_hard = value
+	case "foreground_inactive":
+		theme.foreground_inactive = value
 	}
 }
 
 set_palette :: proc(theme: ^Theme, key, value: string) {
 	switch key {
-	case "foreground":           theme.foreground = value
-	case "background":           theme.background = value
-	case "selection_foreground": theme.selection_foreground = value
-	case "selection_background": theme.selection_background = value
+	case "foreground":
+		theme.foreground = value
+	case "background":
+		theme.background = value
+	case "selection_foreground":
+		theme.selection_foreground = value
+	case "selection_background":
+		theme.selection_background = value
 	case:
 		if strings.has_prefix(key, "color") {
 			index, ok := strconv.parse_int(strings.trim_prefix(key, "color"), 10)
@@ -150,11 +173,17 @@ load_theme :: proc(path: string) -> (Theme, bool) {
 		set_palette(&theme, fields[0], fields[1])
 	}
 
-	if !valid_id(theme.id) || theme.display_name == "" || theme.nvim_colorscheme == "" ||
-	   theme.kde_id == "" || !valid_hex_color(theme.kde_accent) ||
-	   !valid_hex_color(theme.background_alt) || !valid_hex_color(theme.background_hard) ||
-	   !valid_hex_color(theme.foreground_inactive) || !valid_hex_color(theme.foreground) ||
-	   !valid_hex_color(theme.background) || !valid_hex_color(theme.selection_foreground) ||
+	if !valid_id(theme.id) ||
+	   theme.display_name == "" ||
+	   theme.nvim_colorscheme == "" ||
+	   theme.kde_id == "" ||
+	   !valid_hex_color(theme.kde_accent) ||
+	   !valid_hex_color(theme.background_alt) ||
+	   !valid_hex_color(theme.background_hard) ||
+	   !valid_hex_color(theme.foreground_inactive) ||
+	   !valid_hex_color(theme.foreground) ||
+	   !valid_hex_color(theme.background) ||
+	   !valid_hex_color(theme.selection_foreground) ||
 	   !valid_hex_color(theme.selection_background) {
 		fmt.eprintf("Theme %s is missing required metadata or palette values.\n", path)
 		return theme, false
@@ -184,7 +213,7 @@ hex_to_rgb :: proc(value: string) -> string {
 	r := (number >> 16) & 0xff
 	g := (number >> 8) & 0xff
 	b := number & 0xff
-	return fmt.aprintf("%d,%d,%d", r, g, b, allocator=context.temp_allocator)
+	return fmt.aprintf("%d,%d,%d", r, g, b, allocator = context.temp_allocator)
 }
 
 render_tmux :: proc(theme: Theme) {
@@ -194,17 +223,51 @@ render_tmux :: proc(theme: Theme) {
 	fmt.printf("set -g mode-style 'fg=%s,bg=%s'\n", theme.background, theme.colors[3])
 	fmt.printf("set -g pane-border-style 'fg=%s'\n", theme.colors[8])
 	fmt.printf("set -g pane-active-border-style 'fg=%s'\n", theme.colors[2])
-	fmt.printf("set -g window-status-format '#[fg=%s,bg=%s] #I:#W '\n", theme.colors[8], theme.background)
-	fmt.printf("set -g window-status-current-format '#[fg=%s,bg=%s,bold] #I:#W '\n", theme.background, theme.colors[3])
-	fmt.printf("set -g window-status-bell-style 'fg=%s,bg=%s,bold'\n", theme.colors[1], theme.background)
-	fmt.printf("set -g status-left '#[fg=%s,bg=%s,bold] #S #[fg=%s,bg=%s,nobold]'\n", theme.background, theme.colors[2], theme.colors[2], theme.background)
-	fmt.printf("set -g status-right '#[fg=%s,bg=%s]#[fg=%s,bg=%s] #{pane_current_path} '\n", theme.colors[5], theme.background, theme.background, theme.colors[5])
+	fmt.printf(
+		"set -g window-status-format '#[fg=%s,bg=%s] #I:#W '\n",
+		theme.colors[8],
+		theme.background,
+	)
+	fmt.printf(
+		"set -g window-status-current-format '#[fg=%s,bg=%s,bold] #I:#W '\n",
+		theme.background,
+		theme.colors[3],
+	)
+	fmt.printf(
+		"set -g window-status-bell-style 'fg=%s,bg=%s,bold'\n",
+		theme.colors[1],
+		theme.background,
+	)
+	fmt.printf(
+		"set -g status-left '#[fg=%s,bg=%s,bold] #S #[fg=%s,bg=%s,nobold]'\n",
+		theme.background,
+		theme.colors[2],
+		theme.colors[2],
+		theme.background,
+	)
+	fmt.printf(
+		"set -g status-right '#[fg=%s,bg=%s]#[fg=%s,bg=%s] #{pane_current_path} '\n",
+		theme.colors[5],
+		theme.background,
+		theme.background,
+		theme.colors[5],
+	)
 }
 
 write_color_group :: proc(
 	builder: ^strings.Builder,
-	name, background, alternate, foreground, inactive, focus, hover,
-	red, orange, green, link, visited: string,
+	name,
+	background,
+	alternate,
+	foreground,
+	inactive,
+	focus,
+	hover,
+	red,
+	orange,
+	green,
+	link,
+	visited: string,
 ) {
 	fmt.sbprintf(builder, "[Colors:%s]\n", name)
 	fmt.sbprintf(builder, "BackgroundAlternate=%s\nBackgroundNormal=%s\n", alternate, background)
@@ -231,25 +294,147 @@ render_kde_colors :: proc(theme: Theme) -> string {
 	selection_fg := hex_to_rgb(theme.selection_foreground)
 
 	builder: strings.Builder
-	fmt.sbprintf(&builder, "[ColorEffects:Disabled]\nColor=%s\nColorAmount=0\nColorEffect=0\nContrastAmount=0.65\nContrastEffect=1\nIntensityAmount=0.1\nIntensityEffect=2\n\n", bg_alt)
-	fmt.sbprintf(&builder, "[ColorEffects:Inactive]\nChangeSelectionColor=false\nColor=%s\nColorAmount=0.025\nColorEffect=2\nContrastAmount=0.1\nContrastEffect=2\nEnable=false\nIntensityAmount=0\nIntensityEffect=0\n\n", inactive)
-	write_color_group(&builder, "Button", bg_alt, bg, fg, inactive, accent, hover, red, orange, green, link, visited)
-	write_color_group(&builder, "Complementary", bg_hard, bg, fg, inactive, accent, hover, red, orange, green, link, visited)
-	write_color_group(&builder, "Header", bg_alt, bg, fg, inactive, accent, hover, red, orange, green, link, visited)
-	write_color_group(&builder, "Tooltip", bg_hard, bg, fg, inactive, accent, hover, red, orange, green, link, visited)
-	write_color_group(&builder, "View", bg, bg_alt, fg, inactive, accent, hover, red, orange, green, link, visited)
-	write_color_group(&builder, "Window", bg, bg_alt, fg, inactive, accent, hover, red, orange, green, link, visited)
-	write_color_group(&builder, "Selection", orange, accent, selection_fg, inactive, accent, hover, red, orange, green, link, visited)
-	fmt.sbprintf(&builder, "[General]\nColorScheme=%s\nName=%s\nTitlebarIsAccentColored=false\nshadeSortColumn=true\n\n", theme.kde_id, theme.display_name)
+	fmt.sbprintf(
+		&builder,
+		"[ColorEffects:Disabled]\nColor=%s\nColorAmount=0\nColorEffect=0\nContrastAmount=0.65\nContrastEffect=1\nIntensityAmount=0.1\nIntensityEffect=2\n\n",
+		bg_alt,
+	)
+	fmt.sbprintf(
+		&builder,
+		"[ColorEffects:Inactive]\nChangeSelectionColor=false\nColor=%s\nColorAmount=0.025\nColorEffect=2\nContrastAmount=0.1\nContrastEffect=2\nEnable=false\nIntensityAmount=0\nIntensityEffect=0\n\n",
+		inactive,
+	)
+	write_color_group(
+		&builder,
+		"Button",
+		bg_alt,
+		bg,
+		fg,
+		inactive,
+		accent,
+		hover,
+		red,
+		orange,
+		green,
+		link,
+		visited,
+	)
+	write_color_group(
+		&builder,
+		"Complementary",
+		bg_hard,
+		bg,
+		fg,
+		inactive,
+		accent,
+		hover,
+		red,
+		orange,
+		green,
+		link,
+		visited,
+	)
+	write_color_group(
+		&builder,
+		"Header",
+		bg_alt,
+		bg,
+		fg,
+		inactive,
+		accent,
+		hover,
+		red,
+		orange,
+		green,
+		link,
+		visited,
+	)
+	write_color_group(
+		&builder,
+		"Tooltip",
+		bg_hard,
+		bg,
+		fg,
+		inactive,
+		accent,
+		hover,
+		red,
+		orange,
+		green,
+		link,
+		visited,
+	)
+	write_color_group(
+		&builder,
+		"View",
+		bg,
+		bg_alt,
+		fg,
+		inactive,
+		accent,
+		hover,
+		red,
+		orange,
+		green,
+		link,
+		visited,
+	)
+	write_color_group(
+		&builder,
+		"Window",
+		bg,
+		bg_alt,
+		fg,
+		inactive,
+		accent,
+		hover,
+		red,
+		orange,
+		green,
+		link,
+		visited,
+	)
+	write_color_group(
+		&builder,
+		"Selection",
+		orange,
+		accent,
+		selection_fg,
+		inactive,
+		accent,
+		hover,
+		red,
+		orange,
+		green,
+		link,
+		visited,
+	)
+	fmt.sbprintf(
+		&builder,
+		"[General]\nColorScheme=%s\nName=%s\nTitlebarIsAccentColored=false\nshadeSortColumn=true\n\n",
+		theme.kde_id,
+		theme.display_name,
+	)
 	fmt.sbprintf(&builder, "[KDE]\ncontrast=4\n\n")
-	fmt.sbprintf(&builder, "[WM]\nactiveBackground=%s\nactiveBlend=%s\nactiveForeground=%s\ninactiveBackground=%s\ninactiveBlend=%s\ninactiveForeground=%s\n", bg_alt, fg, fg, bg, bg_alt, inactive)
+	fmt.sbprintf(
+		&builder,
+		"[WM]\nactiveBackground=%s\nactiveBlend=%s\nactiveForeground=%s\ninactiveBackground=%s\ninactiveBlend=%s\ninactiveForeground=%s\n",
+		bg_alt,
+		fg,
+		fg,
+		bg,
+		bg_alt,
+		inactive,
+	)
 	return strings.to_string(builder)
 }
 
 run_process :: proc(command: []string, quiet := false) -> bool {
 	// A nil environment inherits the CLI's environment, including the UTF-8
 	// locale established in main.
-	desc := os.Process_Desc{command = command}
+	desc := os.Process_Desc {
+		command = command,
+	}
 	if !quiet {
 		desc.stdin = os.stdin
 		desc.stdout = os.stdout
@@ -269,8 +454,17 @@ apply_kde :: proc(theme: Theme) -> bool {
 		fmt.eprintln("HOME is not set; cannot install KDE theme files.")
 		return false
 	}
-	color_dir := fmt.aprintf("%s/.local/share/color-schemes", home, allocator=context.temp_allocator)
-	desktop_dir := fmt.aprintf("%s/.local/share/plasma/desktoptheme/%s", home, theme.kde_id, allocator=context.temp_allocator)
+	color_dir := fmt.aprintf(
+		"%s/.local/share/color-schemes",
+		home,
+		allocator = context.temp_allocator,
+	)
+	desktop_dir := fmt.aprintf(
+		"%s/.local/share/plasma/desktoptheme/%s",
+		home,
+		theme.kde_id,
+		allocator = context.temp_allocator,
+	)
 	// make_directory_all reports Exist on this Odin version for an existing
 	// directory; the following writes provide the useful error if it is unusable.
 	_ = os.make_directory_all(color_dir)
@@ -278,8 +472,17 @@ apply_kde :: proc(theme: Theme) -> bool {
 
 	colors := render_kde_colors(theme)
 	defer delete(colors)
-	color_path := fmt.aprintf("%s/%s.colors", color_dir, theme.kde_id, allocator=context.temp_allocator)
-	desktop_colors_path := fmt.aprintf("%s/colors", desktop_dir, allocator=context.temp_allocator)
+	color_path := fmt.aprintf(
+		"%s/%s.colors",
+		color_dir,
+		theme.kde_id,
+		allocator = context.temp_allocator,
+	)
+	desktop_colors_path := fmt.aprintf(
+		"%s/colors",
+		desktop_dir,
+		allocator = context.temp_allocator,
+	)
 	if err := os.write_entire_file(color_path, colors); err != nil {
 		fmt.eprintf("Could not write %s: %v\n", color_path, err)
 		return false
@@ -290,7 +493,8 @@ apply_kde :: proc(theme: Theme) -> bool {
 	}
 	// Odin's formatter treats a literal opening brace as Python-style format
 	// syntax, so emit JSON opening braces through %c placeholders.
-	metadata := fmt.aprintf(`%c
+	metadata := fmt.aprintf(
+		`%c
   "KPlugin": %c
     "Authors": [%c"Name": "theme CLI"}],
     "Description": "Shared %s palette with system Plasma assets",
@@ -301,24 +505,45 @@ apply_kde :: proc(theme: Theme) -> bool {
     "Version": "1.0"
   }
 }
-`, '{', '{', '{', theme.display_name, theme.kde_id, theme.display_name)
+`,
+		'{',
+		'{',
+		'{',
+		theme.display_name,
+		theme.kde_id,
+		theme.display_name,
+	)
 	defer delete(metadata)
-	metadata_path := fmt.aprintf("%s/metadata.json", desktop_dir, allocator=context.temp_allocator)
+	metadata_path := fmt.aprintf(
+		"%s/metadata.json",
+		desktop_dir,
+		allocator = context.temp_allocator,
+	)
 	if err := os.write_entire_file(metadata_path, metadata); err != nil {
 		fmt.eprintf("Could not write %s: %v\n", metadata_path, err)
 		return false
 	}
 
-	colors_ok := run_process({"plasma-apply-colorscheme", theme.kde_id}, quiet=false)
-	_ = run_process({"plasma-apply-colorscheme", "--accent-color", theme.kde_accent}, quiet=false)
-	desktop_ok := run_process({"plasma-apply-desktoptheme", theme.kde_id}, quiet=false)
+	colors_ok := run_process({"plasma-apply-colorscheme", theme.kde_id}, quiet = false)
+	_ = run_process(
+		{"plasma-apply-colorscheme", "--accent-color", theme.kde_accent},
+		quiet = false,
+	)
+	desktop_ok := run_process({"plasma-apply-desktoptheme", theme.kde_id}, quiet = false)
 	return colors_ok && desktop_ok
 }
 
 reload_apps :: proc() {
 	config := config_home()
-	_ = run_process({"pkill", "-USR1", "-x", "kitty"}, quiet=true)
-	_ = run_process({"tmux", "source-file", fmt.aprintf("%s/tmux/tmux.conf", config, allocator=context.temp_allocator)}, quiet=true)
+	_ = run_process({"pkill", "-USR1", "-x", "kitty"}, quiet = true)
+	_ = run_process(
+		{
+			"tmux",
+			"source-file",
+			fmt.aprintf("%s/tmux/tmux.conf", config, allocator = context.temp_allocator),
+		},
+		quiet = true,
+	)
 }
 
 apply_current :: proc() -> bool {
@@ -328,7 +553,10 @@ apply_current :: proc() -> bool {
 	}
 	kde_ok := apply_kde(theme)
 	reload_apps()
-	fmt.printf("Applied %s. Restart existing Neovim instances to update them.\n", theme.display_name)
+	fmt.printf(
+		"Applied %s. Restart existing Neovim instances to update them.\n",
+		theme.display_name,
+	)
 	return kde_ok
 }
 
@@ -338,7 +566,7 @@ set_theme :: proc(raw_id: string) -> bool {
 		fmt.eprintf("Invalid theme name: %s\n", raw_id)
 		return false
 	}
-	path := fmt.aprintf("%s/themes/%s.conf", theme_root(), id, allocator=context.temp_allocator)
+	path := fmt.aprintf("%s/themes/%s.conf", theme_root(), id, allocator = context.temp_allocator)
 	theme, ok := load_theme(path)
 	if !ok {
 		return false
@@ -347,10 +575,13 @@ set_theme :: proc(raw_id: string) -> bool {
 		fmt.eprintf("Theme ID %s does not match filename %s.\n", theme.id, id)
 		return false
 	}
-	pointer := fmt.aprintf("# Shared theme pointer. Managed by the theme CLI.\ninclude themes/%s.conf\n", id)
+	pointer := fmt.aprintf(
+		"# Shared theme pointer. Managed by the theme CLI.\ninclude themes/%s.conf\n",
+		id,
+	)
 	defer delete(pointer)
-	conf := fmt.aprintf("%s/theme.conf", theme_root(), allocator=context.temp_allocator)
-	temporary := fmt.aprintf("%s.tmp", conf, allocator=context.temp_allocator)
+	conf := fmt.aprintf("%s/theme.conf", theme_root(), allocator = context.temp_allocator)
+	temporary := fmt.aprintf("%s.tmp", conf, allocator = context.temp_allocator)
 	if err := os.write_entire_file(temporary, pointer); err != nil {
 		fmt.eprintf("Could not write %s: %v\n", temporary, err)
 		return false
@@ -365,7 +596,12 @@ set_theme :: proc(raw_id: string) -> bool {
 list_themes :: proc() {
 	theme_ids := [?]string{"gruvbox", "catppuccin"}
 	for id in theme_ids {
-		path := fmt.aprintf("%s/themes/%s.conf", theme_root(), id, allocator=context.temp_allocator)
+		path := fmt.aprintf(
+			"%s/themes/%s.conf",
+			theme_root(),
+			id,
+			allocator = context.temp_allocator,
+		)
 		if theme, ok := load_theme(path); ok {
 			fmt.printf("%s\t%s\n", id, theme.display_name)
 		}
