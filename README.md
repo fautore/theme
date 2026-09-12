@@ -2,7 +2,7 @@
 
 Small Odin CLI that manages the shared configuration in
 `~/.config/theme/theme.conf` and applies it to KDE/Qt, SDDM, Kitty, tmux,
-Neovim, Firefox, and Chrome.
+Neovim, Firefox, Chrome, and Logseq.
 
 ## Installation
 
@@ -38,6 +38,8 @@ theme current
 theme set gruvbox
 theme set catppuccin
 theme apply
+theme apply logseq
+theme render logseq
 ```
 
 SDDM support generates a login-screen theme in
@@ -45,6 +47,15 @@ SDDM support generates a login-screen theme in
 `/usr/share/sddm/themes/theme-cli`, and selects it through
 `/etc/sddm.conf.d/theme-cli.conf` when run as root or when `pkexec` is
 available. The new display-manager theme appears on the next login screen.
+
+Logseq support generates `~/.config/theme/logseq.css` (or the equivalent
+`$XDG_CONFIG_HOME` path) and adds a `:custom-css-url` import to Logseq's global
+`~/.logseq/config/config.edn`. This applies the palette to every graph. If that
+setting already contains a user-defined value, the CLI leaves it unchanged and
+prints the import path so it can be merged manually. `theme apply logseq`
+applies only this integration, while `theme render logseq` prints the generated
+stylesheet to standard output. Restart Logseq if a running instance does not
+reload the stylesheet automatically.
 
 ## Palette reference
 
@@ -59,8 +70,9 @@ include themes/gruvbox.conf
 ```
 
 Theme files live under `~/.config/theme/themes/<id>.conf`. Example theme files
-are available in `examples/`. A theme file contains metadata comments beginning
-with `#@`, followed by palette keys:
+are available in `examples/`. A theme file contains a version directive,
+metadata comments beginning with `#@`, optional wallpaper directives, and
+palette keys:
 
 ```conf
 version 1
@@ -74,6 +86,10 @@ version 1
 #@ background_alt #282828
 #@ background_hard #1d2021
 #@ foreground_inactive #928374
+
+desktop_wallpaper ~/Pictures/wallpapers/gruvbox-desktop.png
+lock_wallpaper ~/Pictures/wallpapers/gruvbox-lock.png
+login_wallpaper ~/Pictures/wallpapers/gruvbox-lock.png
 
 foreground #ebdbb2
 background #282828
@@ -108,12 +124,18 @@ Required metadata keys:
 - `kde_accent`, `background_alt`, `background_hard`, `foreground_inactive`:
   `#rrggbb` colors used by generated KDE files.
 
-Optional metadata keys currently parsed for external config consumers:
+Optional metadata keys:
 
 - `nvim_flavour`
 - `nvim_contrast`
-- `sddm_wallpaper`: image copied into the generated SDDM theme. Absolute paths
-  and paths beginning with `~/` are supported.
+
+Optional directives:
+
+- `desktop_wallpaper`: image applied to the Plasma desktop.
+- `lock_wallpaper`: image applied to the Plasma lock screen.
+- `login_wallpaper`: image copied into and used by the generated SDDM theme.
+
+Wallpaper directives support absolute paths and paths beginning with `~/`.
 
 Required palette keys:
 
